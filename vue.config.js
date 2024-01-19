@@ -24,11 +24,11 @@ module.exports = {
    * In most cases please use '/' !!!
    * Detail: https://cli.vuejs.org/config/#publicpath
    */
-  publicPath: "/",
+  publicPath: "./",
   outputDir: "dist",
   assetsDir: "static",
-  // lintOnSave: process.env.NODE_ENV === 'development',
-  lintOnSave: false,
+  // lintOnSave: process.env.NODE_ENV === 'development', // 是否开启eslint
+  lintOnSave: false, // 关闭eslint
   productionSourceMap: false,
   devServer: {
     port: port,
@@ -38,12 +38,13 @@ module.exports = {
       errors: true,
     },
     proxy: {
-      "/api": {
-        // 代理标识, 如果出现了这个就代表需要代理
-        target: "基地址",
+      [process.env.VUE_APP_BASE_API]: {
+        // target: 'https://heimahr.itheima.net',
+        target: process.env.VUE_APP_BASE_URL,
+        changeOrigin: true,
       },
     },
-    before: require("./mock/mock-server.js"),
+    // before: require('./mock/mock-server.js')
   },
   configureWebpack: {
     // provide the app's title in webpack's name field, so that

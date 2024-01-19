@@ -9,8 +9,8 @@
         :rules="rules"
         class="demo-ruleForm"
       >
-        <el-form-item prop="name">
-          <el-input v-model="ruleForm.name" placeholder="请输入手机号" />
+        <el-form-item prop="mobile">
+          <el-input v-model="ruleForm.mobile" placeholder="请输入手机号" />
         </el-form-item>
         <el-form-item prop="password">
           <el-input
@@ -44,12 +44,12 @@ export default {
     };
     return {
       ruleForm: {
-        name: "",
-        password: "",
+        mobile: "13800000002",
+        password: "hm#qd@23!",
         isAgree: false,
       },
       rules: {
-        name: [
+        mobile: [
           { required: true, message: "请输入手机号", trigger: "blur" },
           {
             pattern: /^1[3456789]\d{9}$/,
@@ -76,9 +76,11 @@ export default {
   },
   methods: {
     submitForm() {
-      this.$refs.ruleForm.validate((valid) => {
+      console.log(process.env.VUE_APP_BASE_API);
+      console.log(process.env.VUE_APP_BASE_URL);
+      this.$refs.ruleForm.validate(async (valid) => {
         if (valid) {
-          alert("submit!");
+          await this.$store.dispatch("user/login", this.ruleForm);
         } else {
           console.log("error submit!!");
           return false;
