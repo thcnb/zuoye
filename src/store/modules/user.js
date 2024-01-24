@@ -1,7 +1,8 @@
 import { getToken, setToken, removeToken } from "@/utils/auth";
-import { loginApi } from "@/api/user";
+import { loginApi, profileApi } from "@/api/user";
 const state = {
   token: getToken(),
+  profile: {},
 };
 
 const mutations = {
@@ -10,8 +11,11 @@ const mutations = {
     setToken(token);
   },
   removeToken(state) {
-    state.token = "";
-    removeToken(token);
+    state.token = null;
+    removeToken();
+  },
+  profileList(state, uesr) {
+    state.profile = uesr;
   },
 };
 
@@ -21,6 +25,14 @@ const actions = {
     const token = await loginApi(payload);
     context.commit("setToken", token);
   },
+  async profiles(context) {
+    const res = await profileApi();
+    context.commit("profileList", res);
+  },
+  logout({commit}){
+    commit('removeToken')
+    commit('profileList',{})
+  }
 };
 
 export default {

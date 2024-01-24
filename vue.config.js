@@ -39,13 +39,13 @@ module.exports = {
     },
     proxy: {
       [process.env.VUE_APP_BASE_API]: {
-        // target: 'https://heimahr.itheima.net',
         target: process.env.VUE_APP_BASE_URL,
         changeOrigin: true,
       },
     },
     // before: require('./mock/mock-server.js')
   },
+
   configureWebpack: {
     // provide the app's title in webpack's name field, so that
     // it can be accessed in index.html to inject the correct title.

@@ -76,13 +76,11 @@ export default {
   },
   methods: {
     submitForm() {
-      console.log(process.env.VUE_APP_BASE_API);
-      console.log(process.env.VUE_APP_BASE_URL);
       this.$refs.ruleForm.validate(async (valid) => {
         if (valid) {
           await this.$store.dispatch("user/login", this.ruleForm);
+          this.$router.push('/')
         } else {
-          console.log("error submit!!");
           return false;
         }
       });
