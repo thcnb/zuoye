@@ -7,7 +7,7 @@
             <span> {{ data.name }}</span>
             <div>
               <span style="margin-right: 10px">{{ data.managerName }}</span>
-              <el-dropdown @command="dropdown($event, data.pid)">
+              <el-dropdown @command="dropdown($event, data.id)">
                 <span class="el-dropdown-link">
                   操作<i class="el-icon-arrow-down el-icon--right"></i>
                 </span>
@@ -23,7 +23,7 @@
       </el-tree>
     </div>
     <!-- 添加框 -->
-    <el-dialog title="部门名称" :visible.sync="dialogFormVisible">
+    <el-dialog :title="title" :visible.sync="dialogFormVisible">
       <el-form :model="form" ref="form" :rules="rules">
         <el-form-item label="部门名称" prop="name" label-width="120px">
           <el-input v-model="form.name"></el-input>
@@ -48,13 +48,53 @@
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button size="mini" @click="add" type="primary">确 定</el-button>
-        <el-button size="mini">取 消</el-button>
+        <el-button size="mini" @click="dialogFormVisible = false"
+          >取 消</el-button
+        >
+      </div>
+    </el-dialog>
+    <!-- 编辑 -->
+    <el-dialog :title="title" :visible.sync="dialogFormVisibles">
+      <el-form :model="forms" ref="form" :rules="rules">
+        <el-form-item label="部门名称" prop="name" label-width="120px">
+          <el-input v-model="forms.name"></el-input>
+        </el-form-item>
+        <el-form-item label="部门编码" prop="code" label-width="120px">
+          <el-input v-model="forms.code"></el-input>
+        </el-form-item>
+        <el-form-item label="部门负责人" prop="managerId" label-width="120px">
+          <el-select v-model="forms.managerId" placeholder="请选择负责人">
+            <el-option
+              v-for="item in simpleList"
+              :key="item.id"
+              :label="item.username"
+              :value="item.id"
+            >
+            </el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="部门介绍" label-width="120px">
+          <el-input type="textarea" v-model="forms.introduce"></el-input>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button size="mini" @click="revise" type="primary">确 定</el-button>
+        <el-button size="mini" @click="dialogFormVisible = false"
+          >取 消</el-button
+        >
       </div>
     </el-dialog>
   </div>
 </template>
 <script>
-import { departmentApi, simpleApi, addDepartmentApi } from "@/api/user";
+import {
+  departmentApi,
+  simpleApi,
+  addDepartmentApi,
+  delDepartmentApi,
+  departmentDetali,
+  departmentRevise,
+} from "@/api/user";
 import { transListToTreeData } from "@/utils";
 import A from "./compuntend.vue";
 export default {
@@ -64,10 +104,18 @@ export default {
   },
   data() {
     return {
+      dialogFormVisibles: false,
+      title: "",
       data: [],
       id: "",
       dialogFormVisible: false,
       form: {
+        name: "",
+        code: "",
+        managerId: "",
+        introduce: "",
+      },
+      forms: {
         name: "",
         code: "",
         managerId: "",
@@ -151,14 +199,42 @@ export default {
     //部门负责人列表
     async simple() {
       const res = await simpleApi();
-      console.log(res);
       this.simpleList = res;
     },
-    //
+    //按照状态调用方法
     dropdown(e, id) {
+      this.id = id;
       if (e == "add") {
         this.dialogFormVisible = true;
         this.id = id;
+        this.title = "添加部门";
+      }
+      if (e == "del") {
+        this.$confirm("确定要删除嘛", {
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          type: "warning",
+        })
+          .then(() => {
+            this.del(id);
+            this.$message({
+              type: "success",
+              message: "删除成功!",
+            });
+            this.departList();
+          })
+          .catch(() => {
+            this.$message({
+              type: "info",
+              message: "已取消删除",
+            });
+          });
+      }
+      if (e == "emit") {
+        this.dialogFormVisibles = true;
+        this.title = "编辑部门";
+        this.detali(id);
+        console.log(this.forms);
       }
     },
     //添加
@@ -177,18 +253,37 @@ export default {
           });
           console.log(res);
           this.dialogFormVisible = false;
+          this.departList();
           this.form = {};
           this.$message({
             message: "添加部门成功",
             type: "success",
           });
-          this.departList();
         }
       });
     },
+    //删除
+    async del(id) {
+      const res = await delDepartmentApi(id);
+    },
+    //编辑回显部门
+    async detali(id) {
+      const res = await departmentDetali(id);
+      this.forms = res;
+    },
+    //编辑
+    async revise() {
+      const res = departmentRevise(this.id, this.forms);
+      console.log(res);
+      this.dialogFormVisibles=false
+      this.departList()
+      this.$message({
+          message: '修改成功',
+          type: 'success'
+        });
+    },
   },
   created() {
-  console.log(this.id);
     this.departList();
     this.simple();
   },

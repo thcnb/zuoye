@@ -44,3 +44,25 @@ export function addDepartmentApi(data) {
     data,
   });
 }
+//删除部门
+export function delDepartmentApi(id) {
+  return service({
+    url: `/company/department/${id}`,
+    method: "DELETE",
+  });
+}
+//获取部门详情
+export function departmentDetali(id) {
+  return service({
+    url: `/company/department/${id}`,
+    method: "GET",
+  });
+}
+//编辑部门
+export function departmentRevise(id, data) {
+  return service({
+    url: `/company/department/${id}`,
+    method: "PUT",
+    data,
+  });
+}
