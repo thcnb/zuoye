@@ -118,14 +118,16 @@ export function param2Obj(url) {
   return obj;
 }
 
-export function transListToTreeData(list, rootValue) {
-  const arr = [];
-  list.forEach((item) => {
-    if (item.pid == rootValue) {
-      const children = transListToTreeData(list, item.id);
-      item.children = children;
-      arr.push(item);
+export function transListToTreeData(data, rootValue) {
+  const arr = []
+  data.forEach((item) => {
+    if (item.pid === rootValue) {
+      const children = transListToTreeData(data, item.id)
+      if (children.length > 0) {
+        item.children = children
+      }
+      arr.push(item)
     }
-  });
-  return arr;
+  })
+  return arr
 }

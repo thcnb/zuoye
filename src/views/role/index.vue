@@ -57,7 +57,13 @@
             <div v-else>
               <a href="#">分配权限</a>
               <a @click="emit(row)" style="margin: 5px" href="#">编辑</a>
-              <el-button type="text" @click="del(row)">删除</el-button>
+              <!-- <el-button type="text" @click="del(row)">删除</el-button> -->
+              <el-popconfirm
+                title="这是一段内容确定删除吗？"
+                @onConfirm="del(row)"
+              >
+                <el-button type="text" slot="reference">删除</el-button>
+              </el-popconfirm>
             </div>
           </template>
         </el-table-column>
@@ -175,7 +181,7 @@ export default {
     },
     //删除角色
     async del(row) {
-      if (row.length == 1) this.page--;
+      if (row.length == 1) this.page - 1;
       await deleteApi(row.id);
       this.roleList();
     },

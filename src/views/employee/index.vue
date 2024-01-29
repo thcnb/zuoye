@@ -12,7 +12,7 @@
           @blur="changes"
         ></el-input>
         <span v-if="data.length == 0" style="text-align: center; color: #ccc"
-          >正在加载.</span
+          >正在加载...........</span
         >
         <el-tree
           v-else
@@ -29,9 +29,13 @@
         <div class="rightTop">
           <el-button size="mini">群发通知</el-button>
           <div style="margin-right: 165px">
-            <el-button size="mini" type="primary">添加员工</el-button>
-            <el-button size="mini">excel导入</el-button>
-            <el-button size="mini">excel导出</el-button>
+            <el-button size="mini" @click="add" type="primary"
+              >添加员工</el-button
+            >
+            <el-button size="mini" @click="showDialog = true"
+              >excel导入</el-button
+            >
+            <el-button size="mini" @click="exportExcle">excel导出</el-button>
           </div>
         </div>
         <el-table ref="multipleTable" :data="tableData">
@@ -44,7 +48,7 @@
                 class="user-avatar"
               />
               <span style="padding: 5px" class="user-avatar" v-else>{{
-                row.username.charAt(2)
+                row.username.charAt(0)
               }}</span>
             </template>
           </el-table-column>
@@ -80,9 +84,14 @@
           </el-table-column>
           <el-table-column label="操作">
             <template v-slot="{ row }">
-              <el-button type="text">查看</el-button>
+              <el-button type="text" @click="emit(row.id)">查看</el-button>
               <el-button type="text">角色</el-button>
-              <el-button @click="del(row)" type="text">删除</el-button>
+              <el-popconfirm
+                title="这是一段内容确定删除吗？"
+                @onConfirm="del(row)"
+              >
+                <el-button type="text" slot="reference">删除</el-button>
+              </el-popconfirm>
             </template>
           </el-table-column>
         </el-table>
@@ -97,20 +106,37 @@
         </el-pagination>
       </div>
     </div>
+    <ImportExcel
+      :show-dialog.sync="showDialog"
+      @uploadSuccess="employee"
+    />
   </div>
 </template>
 
 <script>
 import { departmentApi } from "@/api/user";
-import { employeeListApi } from "@/api/employee";
+import ImportExcel from "./commpunent/import-excel.vue";
+import {
+  employeeListApi,
+  exportExcleApi,
+  delmployeeListApi,
+} from "@/api/employee";
 import { transListToTreeData } from "@/utils/index";
+import FileSaver from "file-saver";
+import _ from "lodash";
 export default {
   name: "OAIndex",
-
+  components: {
+    ImportExcel,
+  },
   data() {
     return {
+      showDialog: false, // 控制excel的弹层显示和隐藏
+      //tree结构
       data: [],
+      //表格
       tableData: [],
+      //表格参数
       from: {
         page: 1,
         pagesize: 8,
@@ -126,12 +152,13 @@ export default {
     this.employee();
   },
   methods: {
-    //获取tree列表
+    //点击tree列表渲染右侧数据
     selectNode(event) {
       this.from.departmentId = event.id;
       this.from.page = 1;
       this.employee();
     },
+    //获取tree列表
     async departList() {
       const res = await departmentApi();
       this.data = transListToTreeData(res, 0);
@@ -143,10 +170,11 @@ export default {
       this.total = res.total;
     },
     //模糊搜索
-    change() {
+
+    change: _.debounce(function () {
       this.page = 1;
       this.employee();
-    },
+    }, 300),
     changes() {
       if (this.from.keyword == "") {
         this.employee();
@@ -156,11 +184,30 @@ export default {
       }
     },
     //删除
-    del(row) {},
+    async del(row) {
+      console.log(row);
+      await delmployeeListApi(row.id);
+      this.employee();
+    },
     //分页
     handleCurrentChange(val) {
       this.page = val;
       this.employee();
+    },
+
+    //跳转到添加页面添加
+    add() {
+      this.$router.push("/detali");
+    },
+    //导出excel
+    async exportExcle() {
+      const res = await exportExcleApi();
+      console.log(res);
+      FileSaver.saveAs(res, "员工信息表.xlsx");
+    },
+    //跳转到添加页面 编辑
+    emit(id) {
+      this.$router.push(`/detali/${id}`);
     },
   },
 };
