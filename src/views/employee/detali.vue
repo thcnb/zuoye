@@ -104,6 +104,7 @@
             <el-col :span="12">
               <el-form-item label="员工头像">
                 <!-- 图片上传组件 -->
+                <Img v-model="detailForm.staffPhoto"></Img>
               </el-form-item>
             </el-col>
           </el-row>
@@ -123,6 +124,7 @@
 
 <script>
 import Tree from "./commpunent/detaliTree.vue";
+import Img from "./commpunent/img.vue";
 import {
   addemployeeListApi,
   detalimployeeListApi,
@@ -132,6 +134,7 @@ export default {
   name: "OADetali",
   components: {
     Tree,
+    Img,
   },
   data() {
     return {
@@ -186,6 +189,7 @@ export default {
     };
   },
   created() {
+    console.log(this.$route.params.id);
     if (this.$route.params.id) {
       this.detali();
     }
@@ -196,7 +200,7 @@ export default {
         if (valid) {
           if (this.$route.params.id) {
             // 编辑模式
-            await emitmployeeListApi(this.$route.params.id, this.detailForm);
+            await emitmployeeListApi(this.$route.params.id, {...this.detailForm,id:this.$route.params.id});
             this.$message.success("更新员工成功");
           } else {
             // 新增模式

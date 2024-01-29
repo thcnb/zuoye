@@ -55,7 +55,7 @@
               <el-button size="mini" @click="row.fake = false">取消</el-button>
             </template>
             <div v-else>
-              <a href="#">分配权限</a>
+              <a href="#" @click="assignment(row.id)">分配权限</a>
               <a @click="emit(row)" style="margin: 5px" href="#">编辑</a>
               <!-- <el-button type="text" @click="del(row)">删除</el-button> -->
               <el-popconfirm
@@ -100,15 +100,45 @@
         >
       </div>
     </el-dialog>
+    <!-- 分配权限 -->
+    <el-dialog title="分配权限" :visible.sync="enabledVisible">
+      <el-tree
+        ref="permissionTree"
+        :data="data"
+        show-checkbox
+        node-key="id"
+        default-expand-all
+        :default-checked-keys="permissionIds"
+        :props="defaultProps"
+      />
+      <el-row type="flex" justify="center" align="middle">
+        <el-button size="mini" type="primary" @click="submitPermission"
+          >确定</el-button
+        >
+        <el-button size="mini" @click="enabledVisible = false">取消</el-button>
+      </el-row>
+    </el-dialog>
   </div>
 </template>
 <script>
-import { roleApi, AddroleApi, editApi, deleteApi } from "@/api/role";
+import { roleApi, AddroleApi, editApi, deleteApi, assignPremissionApi } from "@/api/role";
+import { emitApi } from "@/api/employee";
+import { permissionListApi } from "@/api/permission";
+import { transListToTreeData } from "@/utils";
+import { loginApi } from "@/api/user";
 export default {
   name: "Role",
   data() {
     return {
+      defaultProps: {
+        children: "children",
+        label: "name",
+      },
+      permissionIds: [],
       total: 0,
+      data: [],
+      roleId: "",
+      enabledVisible: false,
       tableData: [],
       page: 1,
       pagesize: 5,
@@ -143,7 +173,6 @@ export default {
       });
       this.tableData = res.rows;
       this.total = res.total;
-      console.log(res);
     },
     //添加角色
     async add() {
@@ -184,6 +213,24 @@ export default {
       if (row.length == 1) this.page - 1;
       await deleteApi(row.id);
       this.roleList();
+    },
+    //权限列表
+    async assignment(id) {
+      const res = await permissionListApi();
+      this.data = transListToTreeData(res, 0);
+      this.roleId = id;
+      const { permIds } = await emitApi(this.roleId);
+      this.permissionIds = permIds;
+      this.enabledVisible = true;
+    },
+    async submitPermission() {
+      await assignPremissionApi({
+        id: this.roleId,
+        permIds: this.$refs.permissionTree.getCheckedKeys()
+      })
+      console.log(this.$refs.permissionTree.getCheckedKeys());
+      this.$message.success('角色分配权限成功')
+      this.enabledVisible = false
     },
   },
   created() {

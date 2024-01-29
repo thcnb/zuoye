@@ -85,7 +85,7 @@
           <el-table-column label="操作">
             <template v-slot="{ row }">
               <el-button type="text" @click="emit(row.id)">查看</el-button>
-              <el-button type="text">角色</el-button>
+              <el-button type="text" @click="enabled(row.id)">角色</el-button>
               <el-popconfirm
                 title="这是一段内容确定删除吗？"
                 @onConfirm="del(row)"
@@ -95,21 +95,34 @@
             </template>
           </el-table-column>
         </el-table>
+        <!-- 分页 -->
         <el-pagination
-          @size-change="from.pagesize"
           @current-change="handleCurrentChange"
           :current-page.sync="from.page"
-          :page-size="5"
-          layout="prev, pager, next"
+          :page-size="from.pagesize"
+          layout="total,prev, pager, next"
           :total="total"
         >
         </el-pagination>
       </div>
     </div>
-    <ImportExcel
-      :show-dialog.sync="showDialog"
-      @uploadSuccess="employee"
-    />
+    <el-dialog title="分配角色" :visible.sync="roleDialog">
+      <el-checkbox-group v-model="roleIds">
+        <el-checkbox
+          v-for="(item, index) in roleList"
+          :key="index"
+          :label="item.id"
+          >{{ item.name }}</el-checkbox
+        >
+      </el-checkbox-group>
+      <el-row type="flex" justify="center" align="middle" style="height: 80px">
+        <el-button size="mini" type="primary" @click="handleAssignRole"
+          >确定</el-button
+        >
+        <el-button size="mini" @click="roleDialog = false">取消</el-button>
+      </el-row>
+    </el-dialog>
+    <ImportExcel :show-dialog.sync="showDialog" @uploadSuccess="employee" />
   </div>
 </template>
 
@@ -120,6 +133,9 @@ import {
   employeeListApi,
   exportExcleApi,
   delmployeeListApi,
+  enabledApi,
+  emitApi,
+  assignRoleApi,
 } from "@/api/employee";
 import { transListToTreeData } from "@/utils/index";
 import FileSaver from "file-saver";
@@ -131,6 +147,7 @@ export default {
   },
   data() {
     return {
+      roleDialog: false,
       showDialog: false, // 控制excel的弹层显示和隐藏
       //tree结构
       data: [],
@@ -144,6 +161,9 @@ export default {
         departmentId: 1,
       },
       total: 0,
+      roleList: [],
+      roleIds: [],
+      staffId: null,
     };
   },
 
@@ -208,6 +228,26 @@ export default {
     //跳转到添加页面 编辑
     emit(id) {
       this.$router.push(`/detali/${id}`);
+    },
+    //员工查看角色列表
+    async enabled(id) {
+      this.staffId = id;
+      console.log(id);
+      const res = await enabledApi();
+      this.roleList = res;
+      const ele = await emitApi(id);
+      this.roleIds = ele.permIds;
+      this.roleDialog = true;
+    },
+    //角色列表确定
+    async handleAssignRole() {
+      const res = assignRoleApi({
+        id: this.staffId,
+        roleIds: this.roleIds,
+      });
+      this.$message.success("分配用户角色成功");
+      this.roleDialog = false;
+      console.log(res);
     },
   },
 };
